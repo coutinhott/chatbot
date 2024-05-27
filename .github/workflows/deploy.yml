@@ -1,0 +1,33 @@
+name: Deploy Streamlit Application to AWS EC2
+
+on:
+  push:
+    branches:
+      - main  # Set this to the branch you want to deploy from
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Copy files to EC2
+      run: |
+        rsync -avz --exclude '.git*' --delete ./ ec2-user@your-ec2-instance-public-dns:/path/to/deployment/folder
+
+    - name: SSH and Deploy
+      run: |
+        ssh -o StrictHostKeyChecking=no ec2-user@your-ec2-instance-public-dns << EOF
+          cd /path/to/deployment/folder
+          source myenv/bin/activate  # Activate virtual environment if needed
+          pip install -r requirements.txt  # Install dependencies
+          pkill -f streamlit  # Kill the currently running Streamlit app
+          nohup streamlit run app.py --server.port 80 &  # Run Streamlit app in the background on port 80
+        EOF
