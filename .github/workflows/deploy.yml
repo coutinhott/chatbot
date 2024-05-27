@@ -8,6 +8,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      EC2_PUBLIC_DNS: ${{ secrets.EC2_PUBLIC_DNS }}
+      EC2_DEPLOY_PATH: ${{ secrets.EC2_DEPLOY_PATH }}
 
     steps:
     - name: Checkout code
@@ -20,12 +23,12 @@ jobs:
 
     - name: Copy files to EC2
       run: |
-        rsync -avz --exclude '.git*' --delete ./ ec2-user@your-ec2-instance-public-dns:/path/to/deployment/folder
+        rsync -avz --exclude '.git*' --delete ./ ${{ env.EC2_USER }}@${{ env.EC2_PUBLIC_DNS }}:${{ env.EC2_DEPLOY_PATH }}
 
     - name: SSH and Deploy
       run: |
-        ssh -o StrictHostKeyChecking=no ec2-user@your-ec2-instance-public-dns << EOF
-          cd /path/to/deployment/folder
+        ssh -o StrictHostKeyChecking=no ${{ env.EC2_USER }}@${{ env.EC2_PUBLIC_DNS }} << EOF
+          cd ${{ env.EC2_DEPLOY_PATH }}
           source myenv/bin/activate  # Activate virtual environment if needed
           pip install -r requirements.txt  # Install dependencies
           pkill -f streamlit  # Kill the currently running Streamlit app
