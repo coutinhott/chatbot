@@ -22,6 +22,10 @@ jobs:
       run: |
         ssh-keyscan -H ${{ vars.EC2_PUBLIC_DNS }} >> $HOME/.ssh/known_hosts
 
+    - name: Check SSH Connection
+      run: |
+        ssh -vvv -o StrictHostKeyChecking=no ec2-user@ec2-18-212-203-146.compute-1.amazonaws.com "echo 'SSH Connection Successful'"
+
     - name: Ensure Deploy Directory Exists
       run: |
         ssh -o StrictHostKeyChecking=no ${{ vars.EC2_USER }}@${{ vars.EC2_PUBLIC_DNS }} "mkdir -p ${{ vars.EC2_DEPLOY_PATH }}"
