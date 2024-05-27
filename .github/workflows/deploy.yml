@@ -72,8 +72,10 @@ jobs:
         pkill -f streamlit || true  # Ignore errors if no process is found
     
         # Start Streamlit app
-        nohup streamlit run app.py &
-    
-        EOF
+        nohup streamlit run app.py --server.port 80 > /dev/null 2>&1 &
+
+        # Disown all background processes and detach
+        disown -a
+        exit
 
         
