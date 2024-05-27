@@ -8,9 +8,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    env:
-      EC2_PUBLIC_DNS: ${{ secrets.EC2_PUBLIC_DNS }}
-      EC2_DEPLOY_PATH: ${{ secrets.EC2_DEPLOY_PATH }}
 
     steps:
     - name: Checkout code
@@ -28,13 +25,44 @@ jobs:
     - name: Copy files to EC2
       run: |
         rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude '.git*' --delete ./ $${{ vars.EC2_USER }}@${{ vars.EC2_PUBLIC_DNS }}:${{ vars.EC2_DEPLOY_PATH }}
-      
+    
     - name: SSH and Deploy
       run: |
-        ssh -o StrictHostKeyChecking=no ${{ vars.EC2_USER }}@${{ vars.EC2_PUBLIC_DNS }} << EOF
-          cd ${{ vars.EC2_DEPLOY_PATH }}
-          source myenv/bin/activate  # Activate virtual environment if needed
-          pip install -r requirements.txt  # Install dependencies
-          pkill -f streamlit  # Kill the currently running Streamlit app
-          nohup streamlit run app.py --server.port 80 &  # Run Streamlit app in the background on port 80
+        ssh -o StrictHostKeyChecking=no ${{ vars.EC2_USER }}@${{ vars.EC2_PUBLIC_DNS }} << 'EOF'
+        # Check for Python and install if not exists
+        if ! command -v python3 &> /dev/null
+        then
+            echo "Python3 is not installed. Installing Python3..."
+            sudo apt-get update
+            sudo apt-get install -y python3
+        fi
+    
+        # Check for pip and install if not exists
+        if ! command -v pip3 &> /dev/null
+        then
+            echo "pip3 is not installed. Installing pip3..."
+            sudo apt-get install -y python3-pip
+        fi
+    
+        # Ensure the virtual environment is set up
+        if [ ! -d "${{ vars.EC2_DEPLOY_PATH }}/chatbot_env" ]
+        then
+            echo "Setting up virtual environment..."
+            python3 -m venv ${{ vars.EC2_DEPLOY_PATH }}/chatbot_env
+        fi
+    
+        # Activate virtual environment
+        source ${{ vars.EC2_DEPLOY_PATH }}/chatbot_env/bin/activate
+    
+        # Install dependencies
+        pip install -r requirements.txt
+    
+        # Kill the currently running Streamlit app if any
+        pkill -f streamlit || true  # Ignore errors if no process is found
+    
+        # Start Streamlit app
+        nohup streamlit run app.py --server.port 80 &
+    
         EOF
+
+        
