@@ -61,6 +61,9 @@ jobs:
     
         # Activate virtual environment
         source ${{ vars.EC2_DEPLOY_PATH }}/chatbot_env/bin/activate
+
+        # Upgrade pip
+        python3 -m pip install --upgrade pip
     
         # Install dependencies
         pip install -r requirements.txt
@@ -69,7 +72,7 @@ jobs:
         pkill -f streamlit || true  # Ignore errors if no process is found
     
         # Start Streamlit app
-        nohup streamlit run app.py --server.port 80 &
+        nohup streamlit run app.py &
     
         EOF
 
