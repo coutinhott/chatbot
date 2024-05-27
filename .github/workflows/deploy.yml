@@ -11,14 +11,16 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v2
 
-    - name: Setup SSH Key
+    - name: Validate SSH key format
       run: |
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > ${HOME}/.ssh/id_rsa
-        chmod 600 ${HOME}/.ssh/id_rsa
-        eval "$(ssh-agent -s)"
-        ssh-add ${HOME}/.ssh/id_rsa
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" | ssh-keygen -l -f -
+    
+    - name: Setup SSH
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
     - name: Copy files to EC2
       run: |
