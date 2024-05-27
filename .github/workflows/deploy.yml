@@ -56,7 +56,6 @@ jobs:
         if [ ! -d "chatbot_env" ]
         then
             echo "Setting up virtual environment..."
-            rm -rf chatbot_env
             python3 -m venv chatbot_env
         fi
     
